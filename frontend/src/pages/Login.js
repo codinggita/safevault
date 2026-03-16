@@ -220,27 +220,43 @@ const Login = () => {
   // Demo Login flows directly to dashboard bypass
   const handleDemoLogin = async (provider = 'Demo') => {
     setIsLoading(true);
+    console.log(`[DemoLogin] Starting flow for provider: ${provider}`);
     try {
       showToast(`Initiating ${provider} authentication...`, 'yellow');
+      
+      console.log(`[DemoLogin] Fetching /api/auth/demo...`);
       const res = await fetch('http://localhost:5000/api/auth/demo', { method: 'POST' });
+      
+      console.log(`[DemoLogin] Response status:`, res.status);
       const data = await res.json();
+      console.log(`[DemoLogin] Response data:`, data);
       
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data));
         localStorage.setItem('token', data.token);
         
+        // Force an event so AuthContext (if listening) or other components update
+        window.dispatchEvent(new Event('storage'));
+        
         // Show demo dashboard briefly before truly redirecting
         setIsLoading(false);
         setActivePanel('dashboard');
         
+        console.log(`[DemoLogin] Validation successful. Redirecting in 1.5s...`);
         setTimeout(() => {
-          window.location.href = '/';
+          navigate('/');
+          // Fallback just in case navigate doesn't trigger a full re-render of ProtectedRoute
+          setTimeout(() => {
+            if (window.location.pathname === '/login') window.location.href = '/';
+          }, 100);
         }, 1500);
       } else {
+        console.error(`[DemoLogin] Failed with status ${res.status}:`, data);
         setIsLoading(false);
         showToast("Demo login failed.", 'red');
       }
     } catch (e) {
+      console.error(`[DemoLogin] Network or execution error:`, e);
       setIsLoading(false);
       showToast("Network error.", 'red');
     }
@@ -564,7 +580,9 @@ const Login = () => {
               <button className="back-link bg-transparent border-0" onClick={() => handlePanelSwitch('login')}>
                  <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
               </button>
-              <div className="passkey-icon-lg"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+              <div className="passkey-icon-lg">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3"></circle></svg>
+              </div>
               <div className="panel-header" style={{ textAlign: 'center' }}>
                 <h2>Passkey Auth</h2>
                 <p>Use your device biometrics (Touch ID / Face ID) or hardware key to securely log in.</p>
@@ -577,7 +595,9 @@ const Login = () => {
             
             {/* 6. Dashboard / Success Form */}
             <div className={`panel ${activePanel === 'dashboard' ? 'active' : ''}`}>
-              <div className="success-icon-lg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              <div className="success-icon-lg">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
               <div className="panel-header" style={{ textAlign: 'center' }}>
                 <h2 style={{ color: '#10b981' }}>Access Granted</h2>
                 <p>Welcome to SafeVault Admin Console</p>
