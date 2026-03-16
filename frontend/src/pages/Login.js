@@ -227,38 +227,45 @@ const Login = () => {
       console.log(`[DemoLogin] Fetching /api/auth/demo...`);
       const res = await fetch('http://localhost:5000/api/auth/demo', { method: 'POST' });
       
-      console.log(`[DemoLogin] Response status:`, res.status);
-      const data = await res.json();
-      console.log(`[DemoLogin] Response data:`, data);
-      
       if (res.ok) {
+        console.log(`[DemoLogin] Response status:`, res.status);
+        const data = await res.json();
+        console.log(`[DemoLogin] Response data:`, data);
+        
         localStorage.setItem('user', JSON.stringify(data));
         localStorage.setItem('token', data.token);
-        
-        // Force an event so AuthContext (if listening) or other components update
-        window.dispatchEvent(new Event('storage'));
-        
-        // Show demo dashboard briefly before truly redirecting
-        setIsLoading(false);
-        setActivePanel('dashboard');
-        
-        console.log(`[DemoLogin] Validation successful. Redirecting in 1.5s...`);
-        setTimeout(() => {
-          navigate('/');
-          // Fallback just in case navigate doesn't trigger a full re-render of ProtectedRoute
-          setTimeout(() => {
-            if (window.location.pathname === '/login') window.location.href = '/';
-          }, 100);
-        }, 1500);
       } else {
-        console.error(`[DemoLogin] Failed with status ${res.status}:`, data);
-        setIsLoading(false);
-        showToast("Demo login failed.", 'red');
+        throw new Error(`Demo login failed with status ${res.status}`);
       }
     } catch (e) {
-      console.error(`[DemoLogin] Network or execution error:`, e);
+      console.warn(`[DemoLogin] Backend unreachable or error, falling back to offline demo mode:`, e);
+      showToast(`Backend offline. Using Offline Demo Mode...`, 'yellow');
+      
+      // Offline fallback data
+      const offlineData = {
+        _id: 'demo123',
+        name: 'Demo Admin',
+        email: 'demo@safevault.app',
+        token: 'offline-demo-token-12345'
+      };
+      localStorage.setItem('user', JSON.stringify(offlineData));
+      localStorage.setItem('token', offlineData.token);
+    } finally {
+      // Force an event so AuthContext (if listening) or other components update
+      window.dispatchEvent(new Event('storage'));
+      
+      // Show demo dashboard briefly before truly redirecting
       setIsLoading(false);
-      showToast("Network error.", 'red');
+      setActivePanel('dashboard');
+      
+      console.log(`[DemoLogin] Validation successful. Redirecting in 1.5s...`);
+      setTimeout(() => {
+        navigate('/');
+        // Fallback just in case navigate doesn't trigger a full re-render of ProtectedRoute
+        setTimeout(() => {
+          if (window.location.pathname === '/login') window.location.href = '/';
+        }, 100);
+      }, 1500);
     }
   };
 

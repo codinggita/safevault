@@ -178,39 +178,41 @@ const CSS = `
   .sv-quick-label { font-size:0.81rem;font-weight:600;color:var(--muted); text-align:center; line-height:1.3; }
   .sv-quick:hover .sv-quick-label { color:var(--text); }
 
-  /* ── Security status card (premium) ── */
-  .sv-sec-header {
-    display:flex;align-items:center;gap:0.75rem;
-    padding-bottom:1rem;border-bottom:1px solid var(--border);
-    margin-bottom:0.5rem;
+  /* ── Vault Health card ── */
+  .sv-health-header {
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem;
   }
-  .sv-sec-shield {
-    width:38px;height:38px;border-radius:10px;flex-shrink:0;
-    background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);
+  .sv-health-score {
+    font-size:2rem;font-weight:800;line-height:1;
+    background:linear-gradient(135deg,#60a5fa,#a78bfa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .sv-health-label { font-size:0.72rem;color:var(--muted);font-family:var(--font-mono);margin-top:2px; }
+  .sv-health-icon {
+    width:42px;height:42px;border-radius:12px;flex-shrink:0;
+    background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(167,139,250,0.15));
+    border:1px solid rgba(59,130,246,0.25);
     display:flex;align-items:center;justify-content:center;
-    box-shadow:0 0 12px rgba(59,130,246,0.15);
   }
-  .sv-sec-title { font-weight:700;font-size:1rem;color:var(--text); }
-  .sv-sec-sub { font-size:0.75rem;color:var(--muted);font-family:var(--font-mono);margin-top:1px; }
-
-  .sv-sec-row {
+  .sv-progress-row { margin-bottom:0.85rem; }
+  .sv-progress-row:last-child { margin-bottom:0; }
+  .sv-progress-meta {
     display:flex;justify-content:space-between;align-items:center;
-    padding:0.75rem 0;border-bottom:1px solid var(--border);
-    font-size:0.87rem;
+    margin-bottom:0.35rem;
   }
-  .sv-sec-row:last-child { border-bottom:none;padding-bottom:0; }
-  .sv-sec-key { color:var(--muted);display:flex;align-items:center;gap:7px; }
-  .sv-sec-val {
-    font-family:var(--font-mono);font-size:0.75rem;font-weight:700;
-    padding:0.2rem 0.6rem;border-radius:6px;
-    letter-spacing:0.5px;
+  .sv-progress-name { font-size:0.84rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px; }
+  .sv-progress-pct  { font-size:0.72rem;font-family:var(--font-mono);color:var(--muted); }
+  .sv-progress-bar  {
+    width:100%;height:6px;border-radius:99px;
+    background:rgba(255,255,255,0.07);overflow:hidden;
   }
-  .badge-blue  { background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.25); }
-  .badge-green { background:rgba(52,211,153,0.1); color:#34d399;border:1px solid rgba(52,211,153,0.25); }
-  .badge-purple{ background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.25);}
-  html:not(.dark) .badge-blue  { background:rgba(37,99,235,0.08);color:#1d4ed8;border-color:rgba(37,99,235,0.2); }
-  html:not(.dark) .badge-green { background:rgba(5,150,105,0.08);color:#047857;border-color:rgba(5,150,105,0.2); }
-  html:not(.dark) .badge-purple{ background:rgba(99,102,241,0.08);color:#4f46e5;border-color:rgba(99,102,241,0.18);}
+  html:not(.dark) .sv-progress-bar { background:rgba(0,0,0,0.07); }
+  .sv-progress-fill {
+    height:100%;border-radius:99px;
+    transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  }
 
   /* ── Tip strip ── */
   .sv-tip {
@@ -266,16 +268,31 @@ const QuickAction = ({ label, icon, iconBg, iconColor, link }) => (
   </Link>
 );
 
-/* ── SECURITY ROW ──────────────────────────────────────────── */
-const SecRow = ({ keyIcon, label, value, badgeClass }) => (
-  <div className="sv-sec-row">
-    <span className="sv-sec-key">
-      <span style={{ color: '#60a5fa', opacity: 0.7 }}>{keyIcon}</span>
-      {label}
-    </span>
-    <span className={`sv-sec-val ${badgeClass}`}>{value}</span>
-  </div>
-);
+/* ── VAULT HEALTH PROGRESS ROW ─────────────────────────────── */
+const HealthRow = ({ icon, label, count, max = 5, color, gradFrom, gradTo }) => {
+  const filled = count > 0;
+  const pct = filled ? Math.min(Math.round((count / max) * 100), 100) : 0;
+  return (
+    <div className="sv-progress-row">
+      <div className="sv-progress-meta">
+        <span className="sv-progress-name">
+          <span style={{ color }}>{icon}</span>
+          {label}
+          <span style={{ fontSize:'0.75rem', color:'var(--muted)', fontFamily:'var(--font-mono)', fontWeight:400 }}>
+            ({count} {count === 1 ? 'entry' : 'entries'})
+          </span>
+        </span>
+        <span className="sv-progress-pct">{pct}%</span>
+      </div>
+      <div className="sv-progress-bar">
+        <div className="sv-progress-fill" style={{
+          width: `${pct}%`,
+          background: `linear-gradient(90deg, ${gradFrom}, ${gradTo})`
+        }}/>
+      </div>
+    </div>
+  );
+};
 
 /* ── MAIN DASHBOARD ────────────────────────────────────────── */
 const Dashboard = () => {
@@ -368,33 +385,50 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Security Status */}
+          {/* Vault Health */}
           <div className="sv-a6">
-            <p className="sv-section-title">Security Status</p>
+            <p className="sv-section-title">Vault Health</p>
             <div className="sv-card" style={{ padding:'1.4rem 1.6rem' }}>
 
-              <div className="sv-sec-header">
-                <div className="sv-sec-shield">
-                  <Ic d={Icons.shield} size={18} style={{ color:'#60a5fa' }}/>
-                </div>
+              <div className="sv-health-header">
                 <div>
-                  <div className="sv-sec-title">Vault Protected</div>
-                  <div className="sv-sec-sub">All systems nominal</div>
+                  <div className="sv-health-score">
+                    {loading ? '—' : (
+                      (() => {
+                        const total = stats.contacts + stats.documents + stats.medical + (profileComplete ? 1 : 0);
+                        const max = 15;
+                        const score = Math.min(Math.round((total / max) * 100), 100);
+                        return `${score}%`;
+                      })()
+                    )}
+                  </div>
+                  <div className="sv-health-label">VAULT COMPLETE</div>
                 </div>
-                <span style={{
-                  marginLeft:'auto', fontSize:'0.7rem', fontFamily:"'Space Mono',monospace",
-                  fontWeight:700, color:'#34d399', background:'rgba(52,211,153,0.1)',
-                  border:'1px solid rgba(52,211,153,0.25)', padding:'0.2rem 0.6rem',
-                  borderRadius:'6px', letterSpacing:'1px'
-                }}>SECURE</span>
+                <div className="sv-health-icon">
+                  <Ic d={Icons.activity} size={20} style={{ color:'#60a5fa' }}/>
+                </div>
               </div>
 
-              <SecRow keyIcon={<Ic d={Icons.lock}   size={13}/>} label="Encryption"    value="AES-256-GCM"     badgeClass="badge-blue"/>
-              <SecRow keyIcon={<Ic d={Icons.wifi}   size={13}/>} label="Session"       value="ACTIVE"          badgeClass="badge-green"/>
-              <SecRow keyIcon={<Ic d={Icons.server} size={13}/>} label="Storage"       value="Zero-Knowledge"  badgeClass="badge-purple"/>
-              <SecRow keyIcon={<Ic d={Icons.eye}    size={13}/>} label="Data Access"   value="OWNER ONLY"      badgeClass="badge-blue"/>
-              <SecRow keyIcon={<Ic d={Icons.key}    size={13}/>} label="Auth Method"   value="JWT + Bearer"    badgeClass="badge-purple"/>
-              <SecRow keyIcon={<Ic d={Icons.shield} size={13}/>} label="Vault Status"  value="LOCKED & SECURED" badgeClass="badge-green"/>
+              <HealthRow
+                icon={<Ic d={Icons.user}  size={14}/>} label="Profile"
+                count={profileComplete ? 1 : 0} max={1}
+                color="#a78bfa" gradFrom="#6366f1" gradTo="#a78bfa"
+              />
+              <HealthRow
+                icon={<Ic d={Icons.users} size={14}/>} label="Emergency Contacts"
+                count={loading ? 0 : stats.contacts} max={5}
+                color="#60a5fa" gradFrom="#2563eb" gradTo="#60a5fa"
+              />
+              <HealthRow
+                icon={<Ic d={Icons.file}  size={14}/>} label="Identity Documents"
+                count={loading ? 0 : stats.documents} max={5}
+                color="#34d399" gradFrom="#059669" gradTo="#34d399"
+              />
+              <HealthRow
+                icon={<Ic d={Icons.heart} size={14}/>} label="Medical Records"
+                count={loading ? 0 : stats.medical} max={5}
+                color="#fb7185" gradFrom="#e11d48" gradTo="#fb7185"
+              />
             </div>
           </div>
         </div>
