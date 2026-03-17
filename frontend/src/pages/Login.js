@@ -232,8 +232,8 @@ const Login = () => {
         const data = await res.json();
         console.log(`[DemoLogin] Response data:`, data);
         
-        localStorage.setItem('user', JSON.stringify(data));
-        localStorage.setItem('token', data.token);
+        sessionStorage.setItem('user', JSON.stringify(data));
+        sessionStorage.setItem('token', data.token);
       } else {
         throw new Error(`Demo login failed with status ${res.status}`);
       }
@@ -248,8 +248,8 @@ const Login = () => {
         email: 'demo@safevault.app',
         token: 'offline-demo-token-12345'
       };
-      localStorage.setItem('user', JSON.stringify(offlineData));
-      localStorage.setItem('token', offlineData.token);
+      sessionStorage.setItem('user', JSON.stringify(offlineData));
+      sessionStorage.setItem('token', offlineData.token);
     } finally {
       // Force an event so AuthContext (if listening) or other components update
       window.dispatchEvent(new Event('storage'));
